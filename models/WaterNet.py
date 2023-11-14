@@ -1,105 +1,112 @@
 import torch
 import torch.nn as nn
 
-class WaterNet(nn.Module):
+
+class ConfidenceMapGenerator(nn.Module):
     def __init__(self):
-        super(WaterNet, self).__init__()
-        self._init_layers()
+        super().__init__()
+        # Confidence maps
+        # Accepts input of size (N, 3*4, H, W)
+        self.conv1 = nn.Conv2d(
+            in_channels=12, out_channels=128, kernel_size=7, dilation=1, padding="same"
+        )
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(
+            in_channels=128, out_channels=128, kernel_size=5, dilation=1, padding="same"
+        )
+        self.relu2 = nn.ReLU()
+        self.conv3 = nn.Conv2d(
+            in_channels=128, out_channels=128, kernel_size=3, dilation=1, padding="same"
+        )
+        self.relu3 = nn.ReLU()
+        self.conv4 = nn.Conv2d(
+            in_channels=128, out_channels=64, kernel_size=1, dilation=1, padding="same"
+        )
+        self.relu4 = nn.ReLU()
+        self.conv5 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=7, dilation=1, padding="same"
+        )
+        self.relu5 = nn.ReLU()
+        self.conv6 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=5, dilation=1, padding="same"
+        )
+        self.relu6 = nn.ReLU()
+        self.conv7 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=3, dilation=1, padding="same"
+        )
+        self.relu7 = nn.ReLU()
+        self.conv8 = nn.Conv2d(
+            in_channels=64, out_channels=3, kernel_size=3, dilation=1, padding="same"
+        )
+        self.sigmoid = nn.Sigmoid()
 
-    def _init_layers(self):
-        self.conv2wb_1 = nn.Conv2d(12, 128, 7, 1, 3)
-        self.conv2wb_1_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_2 = nn.Conv2d(128, 128, 5, 1, 2)
-        self.conv2wb_2_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_3 = nn.Conv2d(128, 128, 3, 1, 1)
-        self.conv2wb_3_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_4 = nn.Conv2d(128, 64, 1, 1, 0)
-        self.conv2wb_4_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_5 = nn.Conv2d(64, 64, 7, 1, 3)
-        self.conv2wb_5_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_6 = nn.Conv2d(64, 64, 5, 1, 2)
-        self.conv2wb_6_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_7 = nn.Conv2d(64, 64, 3, 1, 1)
-        self.conv2wb_7_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_77 = nn.Conv2d(64, 3, 3, 1, 1)
-        self.conv2wb_77_sigmoid = nn.Sigmoid()
-
-        # wb
-        self.conv2wb_9 = nn.Conv2d(6, 32, 7, 1, 3)
-        self.conv2wb_9_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_10 = nn.Conv2d(32, 32, 5, 1, 2)
-        self.conv2wb_10_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_11 = nn.Conv2d(32, 3, 3, 1, 1)
-        self.conv2wb_11_relu = nn.ReLU(inplace=True)
-
-        # ce
-        self.conv2wb_99 = nn.Conv2d(6, 32, 7, 1, 3)
-        self.conv2wb_99_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_100 = nn.Conv2d(32, 32, 5, 1, 2)
-        self.conv2wb_100_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_111 = nn.Conv2d(32, 3, 3, 1, 1)
-        self.conv2wb_111_relu = nn.ReLU(inplace=True)
-
-        # gc
-        self.conv2wb_999 = nn.Conv2d(6, 32, 7, 1, 3)
-        self.conv2wb_999_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_1000 = nn.Conv2d(32, 32, 5, 1, 2)
-        self.conv2wb_1000_relu = nn.ReLU(inplace=True)
-
-        self.conv2wb_1111 = nn.Conv2d(32, 3, 3, 1, 1)
-        self.conv2wb_1111_relu = nn.ReLU(inplace=True)
+    def forward(self, x, wb, he, gc):
+        out = torch.cat([x, wb, he, gc], dim=1)
+        out = self.relu1(self.conv1(out))
+        out = self.relu2(self.conv2(out))
+        out = self.relu3(self.conv3(out))
+        out = self.relu4(self.conv4(out))
+        out = self.relu5(self.conv5(out))
+        out = self.relu6(self.conv6(out))
+        out = self.relu7(self.conv7(out))
+        out = self.sigmoid(self.conv8(out))
+        out1, out2, out3 = torch.split(out, [1, 1, 1], dim=1)
+        return out1, out2, out3
 
 
-    def forward(self, x, wb, ce, gc):
-        conb0 = torch.cat([x, wb, ce, gc], dim=1)
-        conv_wb1 = self.conv2wb_1_relu(self.conv2wb_1(conb0))
-        conv_wb2 = self.conv2wb_2_relu(self.conv2wb_2(conv_wb1))
-        conv_wb3 = self.conv2wb_3_relu(self.conv2wb_3(conv_wb2))
-        conv_wb4 = self.conv2wb_4_relu(self.conv2wb_4(conv_wb3))
-        conv_wb5 = self.conv2wb_5_relu(self.conv2wb_5(conv_wb4))
-        conv_wb6 = self.conv2wb_6_relu(self.conv2wb_6(conv_wb5))
-        conv_wb7 = self.conv2wb_7_relu(self.conv2wb_7(conv_wb6))
-        conv_wb77 = self.conv2wb_77_sigmoid(self.conv2wb_77(conv_wb7))
+class Refiner(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=6, out_channels=32, kernel_size=7, dilation=1, padding="same"
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=32, kernel_size=5, dilation=1, padding="same"
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels=32, out_channels=3, kernel_size=3, dilation=1, padding="same"
+        )
+        self.relu1 = nn.ReLU()
+        self.relu2 = nn.ReLU()
+        self.relu3 = nn.ReLU()
 
-        # wb
-        conb00 = torch.cat([x, wb], dim=1)
-        conv_wb9 = self.conv2wb_9_relu(self.conv2wb_9(conb00))
-        conv_wb10 = self.conv2wb_10_relu(self.conv2wb_10(conv_wb9))
-        wb1 = self.conv2wb_11_relu(self.conv2wb_11(conv_wb10))
-
-        # ce
-        conb11 = torch.cat([x, ce], dim=1)
-        conv_wb99 = self.conv2wb_99_relu(self.conv2wb_99(conb11))
-        conv_wb100 = self.conv2wb_100_relu(self.conv2wb_100(conv_wb99))
-        ce1 = self.conv2wb_111_relu(self.conv2wb_111(conv_wb100))
-
-        # gc
-        conb111 = torch.cat([x, gc], dim=1)
-        conv_wb999 = self.conv2wb_999_relu(self.conv2wb_999(conb111))
-        conv_wb1000 = self.conv2wb_1000_relu(self.conv2wb_1000(conv_wb999))
-        gc1 = self.conv2wb_1111_relu(self.conv2wb_1111(conv_wb1000))
-
-        weight_wb, weight_ce, weight_gc = conv_wb77[:, 0:1, :, :], conv_wb77[:, 1:2, :, :], conv_wb77[:, 2:3, :, :]
-        out = (weight_wb * wb1) + (weight_ce * ce1) + (weight_gc * gc1)
-
+    def forward(self, x, xbar):
+        out = torch.cat([x, xbar], dim=1)
+        out = self.relu1(self.conv1(out))
+        out = self.relu2(self.conv2(out))
+        out = self.relu3(self.conv3(out))
         return out
 
+
+class WaterNet(nn.Module):
+    """
+    waternet = WaterNet()
+    in = torch.randn(16, 3, 112, 112)
+    waternet_out = waternet(in, in, in, in)
+    waternet_out.shape
+    # torch.Size([16, 3, 112, 112])
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.cmg = ConfidenceMapGenerator()
+        self.wb_refiner = Refiner()
+        self.he_refiner = Refiner()
+        self.gc_refiner = Refiner()
+
+    def forward(self, x, wb, he, gc):
+        wb_cm, he_cm, gc_cm = self.cmg(x, wb, he, gc)
+        refined_wb = self.wb_refiner(x, wb)
+        refined_he = self.he_refiner(x, he)
+        refined_gc = self.gc_refiner(x, gc)
+        return (
+            torch.mul(refined_wb, wb_cm)
+            + torch.mul(refined_he, he_cm)
+            + torch.mul(refined_gc, gc_cm)
+        )
 
 if __name__ == '__main__':
     t = torch.randn(1, 3, 256, 256).cuda()
     model = WaterNet().cuda()
     res = model(t, t, t, t)
     print(res.shape)
-    
