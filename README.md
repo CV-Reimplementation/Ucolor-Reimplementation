@@ -26,20 +26,26 @@ dataset/
 │  └─ target/
 │     ├─ 1.jpg
 │     ├─ ...
-├─ test/
+└─ test/
    ├─ input/
    │  ├─ 1.jpg
    │  ├─ ...
    ├─ depth/
    │  ├─ 1.jpg
    │  ├─ ...
-   ├─ target/
+   └─ target/
       ├─ 1.jpg
       ├─ ...
 
 ```
 
+input folder contains underwater image
 
+depth folder contains transmission map
+
+target folder contains ground truth
+
+each triplet should have the exact same name and extension
 
 ## Training
 
