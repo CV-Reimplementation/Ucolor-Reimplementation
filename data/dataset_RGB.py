@@ -29,11 +29,10 @@ class DataLoaderTrain(Dataset):
         self.sizex = len(self.tar_filenames)  # get the size of target
 
         self.transform = A.Compose([
+            A.RandomResizedCrop(height=img_options['h'], width=img_options['w']),
             A.Transpose(p=0.3),
             A.Flip(p=0.3),
             A.RandomRotate90(p=0.3),
-            A.Rotate(p=0.3),
-            A.RandomResizedCrop(height=img_options['h'], width=img_options['w']),
             ],
             additional_targets={
                 'target': 'image',
