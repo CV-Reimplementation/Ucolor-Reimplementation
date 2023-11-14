@@ -35,10 +35,10 @@ def train():
     val_dir = opt.TRAINING.VAL_DIR
 
     train_dataset = get_training_data(train_dir, opt.MODEL.INPUT, opt.MODEL.TARGET, {'w': opt.TRAINING.PS_W, 'h': opt.TRAINING.PS_H})
-    trainloader = DataLoader(dataset=train_dataset, batch_size=opt.OPTIM.BATCH_SIZE, shuffle=True, num_workers=16,
+    train_loader = DataLoader(dataset=train_dataset, batch_size=opt.OPTIM.BATCH_SIZE, shuffle=True, num_workers=16,
                              drop_last=False, pin_memory=True)
     val_dataset = get_validation_data(val_dir, opt.MODEL.INPUT, opt.MODEL.TARGET, {'w': opt.TRAINING.PS_W, 'h': opt.TRAINING.PS_H, 'ori': opt.TRAINING.ORI})
-    testloader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False, num_workers=8, drop_last=False,
+    val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False, num_workers=8, drop_last=False,
                             pin_memory=True)
 
     # Model & Loss
@@ -50,19 +50,19 @@ def train():
     optimizer_b = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=opt.OPTIM.LR_INITIAL, betas=(0.9, 0.999), eps=1e-8)
     scheduler_b = optim.lr_scheduler.CosineAnnealingLR(optimizer_b, opt.OPTIM.NUM_EPOCHS, eta_min=opt.OPTIM.LR_MIN)
 
-    trainloader, testloader = accelerator.prepare(trainloader, testloader)
+    train_loader, val_loader = accelerator.prepare(train_loader, val_loader)
     model = accelerator.prepare(model)
     optimizer_b, scheduler_b = accelerator.prepare(optimizer_b, scheduler_b)
 
     start_epoch = 1
     best_epoch = 1
     best_psnr = 0
-    size = len(testloader)
+    size = len(val_loader)
     # training
     for epoch in range(start_epoch, opt.OPTIM.NUM_EPOCHS + 1):
         model.train()
 
-        for i, data in enumerate(tqdm(trainloader, disable=not accelerator.is_local_main_process)):
+        for i, data in enumerate(tqdm(train_loader, disable=not accelerator.is_local_main_process)):
             # get the inputs; data is a list of [target, input, filename]
             inp = data[0].contiguous()
             dep = data[1].contiguous()
@@ -88,11 +88,11 @@ def train():
             model.eval()
             psnr = 0
             ssim = 0
-            for idx, test_data in enumerate(tqdm(testloader, disable=not accelerator.is_local_main_process)):
+            for idx, test_data in enumerate(tqdm(val_loader, disable=not accelerator.is_local_main_process)):
                 # get the inputs; data is a list of [targets, inputs, filename]
                 inp = test_data[0].contiguous()
-                dep = data[1].contiguous()
-                tar = data[2]
+                dep = test_data[1].contiguous()
+                tar = test_data[2]
 
                 with torch.no_grad():
                     res = model(inp, dep)
