@@ -3,168 +3,195 @@ import torch.nn as nn
 from kornia.color import rgb_to_lab, rgb_to_hsv
 
 
+class ConvLayer(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0):
+        super(ConvLayer, self).__init__()
+        self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        # self.norm = norm
+        # self.nonlinear = nonlinear
+        self.normalization = nn.BatchNorm2d(out_channels)
+
+        # if norm == 'bn':
+        #     self.normalization = nn.BatchNorm2d(out_channels)
+        # elif norm == 'in':
+        #     self.normalization = nn.InstanceNorm2d(out_channels, affine=False)
+        # else:
+        #     self.normalization = None
+
+        # if nonlinear == 'relu':
+        #     self.activation = nn.ReLU(inplace=True)
+        # elif nonlinear == 'leakyrelu':
+        #     self.activation = nn.LeakyReLU(0.2)
+        # elif nonlinear == 'PReLU':
+        #     self.activation = nn.PReLU()
+        # else:
+        #     self.activation = None
+
+    def forward(self, x):
+        # out = self.conv2d(x)
+        # if self.normalization is not None:
+        #     out = self.normalization(out)
+        # if self.activation is not None:
+        #     out = self.activation(out)
+        out = self.normalization(self.conv2d(x))
+        return out
+
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         self.relu = nn.ReLU(inplace=True)
 
         # Depth conv
-        self.depth1 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.depth2 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.depth3 = nn.Conv2d(in_channels=3, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.depth1 = ConvLayer(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.depth2 = ConvLayer(in_channels=3, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.depth3 = ConvLayer(in_channels=3, out_channels=512, kernel_size=3, stride=1, padding=1)
         # self.MaxPool2d = nn.AdaptiveMaxPool2d(1)
         # first encoder
         # 256*256
         # HSV
-        self.conv_pan1_0 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_1 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_0 = ConvLayer(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_1 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_2 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_3 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
 
-        self.conv_pan1_4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_5 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_pan1_7 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_4 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_5 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_6 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_pan1_7 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
         #rgb
-        self.conv_ms1_0 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_1 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_0 = ConvLayer(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_1 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_2 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_3 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
 
-        self.conv_ms1_4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_5 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_ms1_7 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_4 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_5 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_6 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_ms1_7 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
         #lab
-        self.conv_hs1_0 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_1 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_0 = ConvLayer(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_1 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_2 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_3 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
 
-        self.conv_hs1_4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_5 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_hs1_7 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_4 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_5 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_6 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_hs1_7 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
         # second encoder
         # 128*128 hsv
-        self.conv_pan2_0 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_1 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_6 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_pan2_7 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_0 = ConvLayer(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_1 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_2 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_3 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_4 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_5 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_6 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_pan2_7 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
         # 128*128 rgb
-        self.conv_ms2_0 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_1 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_6 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_ms2_7 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_0 = ConvLayer(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_1 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_2 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_3 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_4 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_5 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_6 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_ms2_7 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
         # 128*128 lab
-        self.conv_hs2_0 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_1 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_6 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_hs2_7 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_0 = ConvLayer(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_1 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_2 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_3 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_4 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_5 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_6 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_hs2_7 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
         # third encoder
         # hsv
-        self.conv_pan3_0 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_1 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_pan3_7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_0 = ConvLayer(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_1 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_2 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_3 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_4 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_5 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_6 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_pan3_7 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
         #rgb
-        self.conv_ms3_0 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_1 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_ms3_7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_0 = ConvLayer(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_1 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_2 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_3 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_4 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_5 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_6 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_ms3_7 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
         #lab
-        self.conv_hs3_0 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_1 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_hs3_7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_0 = ConvLayer(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_1 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_2 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_3 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_4 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_5 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_6 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_hs3_7 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
 
         # cat conv
-        self.conv_cat_1 = nn.Conv2d(in_channels=384, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_cat_2 = nn.Conv2d(in_channels=768, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_cat_3 = nn.Conv2d(in_channels=1536, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_cat_1 = ConvLayer(in_channels=384, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_cat_2 = ConvLayer(in_channels=768, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_cat_3 = ConvLayer(in_channels=1536, out_channels=512, kernel_size=3, stride=1, padding=1)
 
         #######decoder
         # first
-        self.conv_de1_0 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_1 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv_de1_7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        # self.conv_de1_8 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_0 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_1 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_2 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_3 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_4 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_5 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_6 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv_de1_7 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        # self.conv_de1_8 = ConvLayer(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
 
         # second
-        self.conv_de2_0 = nn.Conv2d(in_channels=768, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_1 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_6 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.conv_de2_7 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
-        # self.conv_de2_8 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_0 = ConvLayer(in_channels=768, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_1 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_2 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_3 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_4 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_5 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_6 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv_de2_7 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
+        # self.conv_de2_8 = ConvLayer(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1)
         # third
-        self.conv_de3_0 = nn.Conv2d(in_channels=384, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_1 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_5 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.conv_de3_7 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
-        # self.conv_de3_8 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_0 = ConvLayer(in_channels=384, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_1 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_2 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_3 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_4 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_5 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_6 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv_de3_7 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
+        # self.conv_de3_8 = ConvLayer(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
 
-        self.conv_de4 = nn.Conv2d(in_channels=128, out_channels=3, kernel_size=1, stride=1, padding=0)
+        self.conv_de4 = ConvLayer(in_channels=128, out_channels=3, kernel_size=1, stride=1, padding=0)
 
         self.se_1 = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
-            nn.BatchNorm2d(384),
-            nn.Conv2d(384, 384 // 16, kernel_size=1, padding=0),
+            ConvLayer(384, 384 // 16, kernel_size=1, padding=0),
             nn.LeakyReLU(inplace=True),
-            nn.BatchNorm2d(384 // 16),
-            nn.Conv2d(384 // 16, 384, kernel_size=1, padding=0)
+            ConvLayer(384 // 16, 384, kernel_size=1, padding=0)
         )
         self.se_2 = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
-            nn.BatchNorm2d(768),
-            nn.Conv2d(768, 768 // 16, kernel_size=1, padding=0),
+            ConvLayer(768, 768 // 16, kernel_size=1, padding=0),
             nn.LeakyReLU(inplace=True),
-            nn.BatchNorm2d(768 // 16),
-            nn.Conv2d(768 // 16, 768, kernel_size=1, padding=0)
+            ConvLayer(768 // 16, 768, kernel_size=1, padding=0)
         )
         self.se_3 = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
-            nn.BatchNorm2d(1536),
-            nn.Conv2d(1536, 1536 // 16, kernel_size=1, padding=0),
+            ConvLayer(1536, 1536 // 16, kernel_size=1, padding=0),
             nn.LeakyReLU(inplace=True),
-            nn.BatchNorm2d(1536 // 16),
-            nn.Conv2d(1536 // 16, 1536, kernel_size=1, padding=0)
+            ConvLayer(1536 // 16, 1536, kernel_size=1, padding=0)
         )
     
     def forward(self, rgb, _depth):
