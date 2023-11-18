@@ -19,8 +19,8 @@ TRAINING:
   RESUME: False
   PS_W: 256 
   PS_H: 256 
-  TRAIN_DIR: '../UW/train/' 
-  VAL_DIR: '../UW/test/'    
+  TRAIN_DIR: '../dataset/UW/train/' 
+  VAL_DIR: '../dataset/UW/test/'    
   SAVE_DIR: './checkpoints/'     
   ORI: False 
 
