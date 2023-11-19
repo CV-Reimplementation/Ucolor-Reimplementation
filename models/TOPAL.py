@@ -200,10 +200,10 @@ class Encoder_MDCBlock1(torch.nn.Module):
 class make_dense(nn.Module):
   def __init__(self, nChannels, growthRate, kernel_size=3):
     super(make_dense, self).__init__()
-    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, activation=None, bias=False)
+    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, activation='relu', bias=False)
 
   def forward(self, x):
-    out = F.relu(self.conv(x))
+    out = self.conv(x)
     out = torch.cat((x, out), 1)
     return out
 
@@ -438,10 +438,8 @@ class DoubleConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.double_conv = nn.Sequential(
-            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation=None),
-            nn.ReLU(inplace=True),
-            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1, activation=None),
-            nn.ReLU(inplace=True)
+            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation='relu'),
+            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1, activation='relu'),
         )
 
     def forward(self, x):
@@ -467,8 +465,7 @@ class BridgeDown(nn.Module):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool2d(2),
-            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation=None),
-            nn.ReLU(inplace=True)
+            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation='relu'),
         )
 
     def forward(self, x):
@@ -480,8 +477,7 @@ class BridgeUP(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.conv_up = nn.Sequential(
-            ConvBlock(in_channels, in_channels, kernel_size=3, padding=1, activation=None),
-            nn.ReLU(inplace=True),
+            ConvBlock(in_channels, in_channels, kernel_size=3, padding=1, activation='relu'),
             nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
         )
 
@@ -554,28 +550,27 @@ class RDB(nn.Module):
         Cin = inChannels
         G = growRate
 
-        self.conv1 = ConvBlock(Cin, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
-        self.conv2 = ConvBlock(Cin + G, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
-        self.conv3 = ConvBlock(Cin + 2 * G, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
-        self.conv4 = ConvBlock(Cin + 3 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
-        self.conv5 = ConvBlock(Cin + 4 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
-        self.conv6 = ConvBlock(Cin + 5 * G, Cin, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
-        self.act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        self.conv1 = ConvBlock(Cin, G, kSize, padding=(kSize -1 )//2, stride=1, activation='lrelu')
+        self.conv2 = ConvBlock(Cin + G, G, kSize, padding=(kSize -1 )//2, stride=1, activation='lrelu')
+        self.conv3 = ConvBlock(Cin + 2 * G, G, kSize, padding=(kSize -1 )//2, stride=1, activation='lrelu')
+        self.conv4 = ConvBlock(Cin + 3 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation='lrelu')
+        self.conv5 = ConvBlock(Cin + 4 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation='lrelu')
+        self.conv6 = ConvBlock(Cin + 5 * G, Cin, kSize, padding=(kSize - 1) // 2, stride=1, activation='lrelu')
 
     def forward(self, x):
-        x1 = self.act(self.conv1(x))
+        x1 = self.conv1(x)
         x1 = F.interpolate(x1, x.shape[2:])
 
-        x2 = self.act(self.conv2(torch.cat((x, x1), 1)))
+        x2 = self.conv2(torch.cat((x, x1), 1))
         x2 = F.interpolate(x2, x.shape[2:])
 
-        x3 = self.act(self.conv3(torch.cat((x, x1, x2), 1)))
+        x3 = self.conv3(torch.cat((x, x1, x2), 1))
         x3 = F.interpolate(x3, x.shape[2:])
 
-        x4 = self.act(self.conv4(torch.cat((x, x1, x2, x3), 1)))
+        x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
         x4 = F.interpolate(x4, x.shape[2:])
 
-        x5 = self.act(self.conv5(torch.cat((x, x1, x2, x3, x4), 1)))
+        x5 = self.conv5(torch.cat((x, x1, x2, x3, x4), 1))
         x5 = F.interpolate(x5, x.shape[2:])
 
         x6 = self.conv6(torch.cat((x, x1, x2, x3, x4, x5), 1))
