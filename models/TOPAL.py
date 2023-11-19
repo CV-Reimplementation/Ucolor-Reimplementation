@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ConvBlock(torch.nn.Module):
-    def __init__(self, input_size, output_size, kernel_size=3, stride=1, padding=0, bias=True, activation='prelu', norm='batch'):
+    def __init__(self, input_size, output_size, kernel_size=3, stride=1, padding=0, bias=True, activation='prelu', norm='batch', groups=1):
         super(ConvBlock, self).__init__()
-        self.conv = torch.nn.Conv2d(input_size, output_size, kernel_size, stride, padding, bias=bias)
+        self.conv = torch.nn.Conv2d(input_size, output_size, kernel_size, stride, padding, bias=bias, groups=groups)
 
         self.norm = norm
         if self.norm =='batch':
@@ -200,7 +200,8 @@ class Encoder_MDCBlock1(torch.nn.Module):
 class make_dense(nn.Module):
   def __init__(self, nChannels, growthRate, kernel_size=3):
     super(make_dense, self).__init__()
-    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, bias=False)
+    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, activation=None, bias=False)
+
   def forward(self, x):
     out = F.relu(self.conv(x))
     out = torch.cat((x, out), 1)
@@ -437,9 +438,9 @@ class DoubleConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.double_conv = nn.Sequential(
-            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1),
+            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation=None),
             nn.ReLU(inplace=True),
-            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1),
+            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1, activation=None),
             nn.ReLU(inplace=True)
         )
 
@@ -466,7 +467,7 @@ class BridgeDown(nn.Module):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool2d(2),
-            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1),
+            ConvBlock(in_channels, out_channels, kernel_size=3, padding=1, activation=None),
             nn.ReLU(inplace=True)
         )
 
@@ -479,7 +480,7 @@ class BridgeUP(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.conv_up = nn.Sequential(
-            ConvBlock(in_channels, in_channels, kernel_size=3, padding=1),
+            ConvBlock(in_channels, in_channels, kernel_size=3, padding=1, activation=None),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
         )
@@ -553,12 +554,12 @@ class RDB(nn.Module):
         Cin = inChannels
         G = growRate
 
-        self.conv1 = ConvBlock(Cin, G, kSize, padding=(kSize -1 )//2, stride=1)
-        self.conv2 = ConvBlock(Cin + G, G, kSize, padding=(kSize -1 )//2, stride=1)
-        self.conv3 = ConvBlock(Cin + 2 * G, G, kSize, padding=(kSize -1 )//2, stride=1)
-        self.conv4 = ConvBlock(Cin + 3 * G, G, kSize, padding=(kSize - 1) // 2, stride=1)
-        self.conv5 = ConvBlock(Cin + 4 * G, G, kSize, padding=(kSize - 1) // 2, stride=1)
-        self.conv6 = ConvBlock(Cin + 5 * G, Cin, kSize, padding=(kSize - 1) // 2, stride=1)
+        self.conv1 = ConvBlock(Cin, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
+        self.conv2 = ConvBlock(Cin + G, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
+        self.conv3 = ConvBlock(Cin + 2 * G, G, kSize, padding=(kSize -1 )//2, stride=1, activation=None)
+        self.conv4 = ConvBlock(Cin + 3 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
+        self.conv5 = ConvBlock(Cin + 4 * G, G, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
+        self.conv6 = ConvBlock(Cin + 5 * G, Cin, kSize, padding=(kSize - 1) // 2, stride=1, activation=None)
         self.act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
 
     def forward(self, x):
@@ -589,26 +590,24 @@ class WRDB(nn.Module):
         self.RDB2 = RDB(num_features, growRate, kSize)
         self.RDB3 = RDB(num_features, growRate, kSize)
 
-        self.conv0= ConvBlock(num_features, num_features, kSize, padding=(kSize -1 )//2, stride=1)
-        self.conv1_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv0= ConvBlock(num_features, num_features, kSize, padding=(kSize -1 )//2, stride=1, activation='lrelu')
+        self.conv1_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv1_2 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv1_2 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                  kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv1_3 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
-                                 kernel_size=1, padding=0, stride=1, groups=num_features)
-
-        self.conv2_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
-                               kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv2_2 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv1_3 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                  kernel_size=1, padding=0, stride=1, groups=num_features)
 
-        self.conv3_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv2_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                kernel_size=1, padding=0, stride=1, groups=num_features)
+        self.conv2_2 = ConvBlock(in_channels=num_features, out_channels=num_features,
+                                 kernel_size=1, padding=0, stride=1, groups=num_features)
 
-        self.act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        self.conv3_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
+                               kernel_size=1, padding=0, stride=1, groups=num_features)
         
     def forward(self, x):
-        x1_0 = self.act(self.conv0(x))
+        x1_0 = self.conv0(x)
         x1_1 = self.conv1_1(x1_0)
         x2_0 = self.RDB1(x1_0)
         x2 = x2_0 + x1_1
