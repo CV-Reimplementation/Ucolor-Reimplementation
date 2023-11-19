@@ -132,9 +132,9 @@ class AL_Area_Selfguidance_Color_Correction(nn.Module):
         return x
 
 
-class UIALN(nn.Module):
+class Detail_Enhancement(nn.Module):
     def __init__(self, in_channels=1, out_channels=1):
-        super(UIALN, self).__init__()
+        super(Detail_Enhancement, self).__init__()
         self.Down_1 = nn.Conv2d(in_channels, 32, kernel_size=3, stride=2)
         self.DB_1 = Dense_Block_IN(4, 32, 32, with_residual=False)
         self.Down_2 = nn.Conv2d(32, 64, kernel_size=3, stride=2)
@@ -189,7 +189,7 @@ class Channels_Fusion(nn.Module):
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = UIALN().to(device)
+    model = Detail_Enhancement().to(device)
     t = torch.randn(1, 3, 256, 256).to(device)
     res = model(t)
     print(res.shape)
