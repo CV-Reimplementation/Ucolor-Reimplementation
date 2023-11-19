@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ConvBlock(torch.nn.Module):
-    def __init__(self, input_size, output_size, kernel_size=3, stride=1, padding=0, bias=True, activation='prelu', norm='batch'):
+    def __init__(self, input_size, output_size, kernel_size=3, stride=1, padding=0, bias=True, activation='prelu', norm='batch', groups=1):
         super(ConvBlock, self).__init__()
-        self.conv = torch.nn.Conv2d(input_size, output_size, kernel_size, stride, padding, bias=bias)
+        self.conv = torch.nn.Conv2d(input_size, output_size, kernel_size, stride, padding, bias=bias, groups=groups)
 
         self.norm = norm
         if self.norm =='batch':
@@ -200,7 +200,8 @@ class Encoder_MDCBlock1(torch.nn.Module):
 class make_dense(nn.Module):
   def __init__(self, nChannels, growthRate, kernel_size=3):
     super(make_dense, self).__init__()
-    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, bias=False, activation='relu')
+    self.conv = ConvBlock(nChannels, growthRate, kernel_size=kernel_size, padding=(kernel_size-1)//2, activation='relu', bias=False)
+
   def forward(self, x):
     out = self.conv(x)
     out = torch.cat((x, out), 1)
@@ -584,19 +585,19 @@ class WRDB(nn.Module):
         self.RDB3 = RDB(num_features, growRate, kSize)
 
         self.conv0= ConvBlock(num_features, num_features, kSize, padding=(kSize -1 )//2, stride=1, activation='lrelu')
-        self.conv1_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv1_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv1_2 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv1_2 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                  kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv1_3 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv1_3 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                  kernel_size=1, padding=0, stride=1, groups=num_features)
 
-        self.conv2_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv2_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                kernel_size=1, padding=0, stride=1, groups=num_features)
-        self.conv2_2 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv2_2 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                  kernel_size=1, padding=0, stride=1, groups=num_features)
 
-        self.conv3_1 = nn.Conv2d(in_channels=num_features, out_channels=num_features,
+        self.conv3_1 = ConvBlock(in_channels=num_features, out_channels=num_features,
                                kernel_size=1, padding=0, stride=1, groups=num_features)
         
     def forward(self, x):

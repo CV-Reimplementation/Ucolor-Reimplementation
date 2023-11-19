@@ -187,6 +187,21 @@ class Channels_Fusion(nn.Module):
         return x
 
 
+class UIALN(nn.Module):
+    def __init__(self, in_channels=3, out_channels=3):
+        super(UIALN, self).__init__()
+        self.chan1 = Detail_Enhancement()
+        self.chan2 = Detail_Enhancement()
+        self.chan3 = Detail_Enhancement()
+        self.fuse = Channels_Fusion()
+
+    def forward(self, x):
+        chan1 = self.chan1(x[:,0,:,:])
+        chan2 = self.chan2(x[:,1,:,:])
+        chan3 = self.chan3(x[:,2,:,:])
+        res = self.fuse(torch.cat((chan1, chan2, chan3), dim=1))
+        return res
+
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = Detail_Enhancement().to(device)
